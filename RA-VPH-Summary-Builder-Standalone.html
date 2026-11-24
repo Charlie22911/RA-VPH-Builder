@@ -118,6 +118,38 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     th { background: var(--bg-card); position: sticky; top: 0; z-index: 10; font-weight: 600; white-space: nowrap; }
     td.wrap { min-width: 260px; max-width: 480px; }
     .status-bar { margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-secondary); }
+    .bulk-warning { color: var(--med); font-size: 0.84rem; }
+    .header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.8rem; flex-wrap: wrap; }
+    .about-button {
+      background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border);
+      border-radius: 0.45rem; padding: 0.4rem 0.75rem; cursor: pointer; white-space: nowrap;
+    }
+    .about-button:hover { border-color: var(--accent); }
+    .about-dialog {
+      width: min(40rem, calc(100% - 2rem)); max-height: 85vh; margin: auto;
+      color: var(--text-primary); background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 0.75rem; box-shadow: 0 1rem 3rem #0008;
+    }
+    .about-dialog::backdrop { background: #020617b8; }
+    .about-heading {
+      position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center;
+      gap: 0.75rem; padding: 0.85rem 1.15rem; background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+    }
+    .about-heading h2 { font-size: 1.15rem; color: var(--accent); }
+    .about-content { padding: 1.15rem; display: grid; gap: 0.85rem; font-size: 0.9rem; }
+    .about-content h3 { font-size: 1rem; margin-bottom: 0.35rem; }
+    .about-content ol { padding-left: 1.25rem; }
+    .about-content li + li { margin-top: 0.3rem; }
+    .about-details { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; }
+    .about-details dt { color: var(--text-secondary); }
+    .about-content a { color: var(--accent); }
+    .about-content details { padding-top: 0.75rem; border-top: 1px solid var(--border); }
+    .about-content summary { cursor: pointer; font-weight: 600; }
+    .about-license {
+      margin-top: 0.6rem; padding: 0.75rem; max-height: 15rem; overflow: auto; white-space: pre-wrap;
+      background: var(--bg-primary); border: 1px solid var(--border);
+      font: 0.78rem/1.5 ui-monospace, monospace;
+    }
   </style>
 </head>
 <body>
@@ -127,11 +159,14 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       <h1>RA VPH Summary Builder</h1>
       <p>Automated Vulnerability Remediation Asset Manager (VRAM) Export Processor</p>
     </div>
-    <div id="bannerInfo" style="font-size:0.85rem; color:var(--text-secondary);"></div>
+    <div class="header-actions">
+      <div id="bannerInfo" style="font-size:0.85rem; color:var(--text-secondary);"></div>
+      <button class="about-button" id="aboutButton" type="button" aria-haspopup="dialog">About</button>
+    </div>
   </header>
 
   <div class="lib-warning" id="libWarning">
-    <strong>SheetJS (XLSX) Not Detected!</strong> Please paste the inline <code>&lt;script&gt;...&lt;/script&gt;</code> block from your <code>WSA-Block-List-Builder-Standalone.html</code> file into the marked section in the <code>&lt;head&gt;</code> of this HTML file.
+    <strong>The spreadsheet library could not load.</strong> Open a fresh copy of the standalone HTML file.
   </div>
 
   <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
@@ -160,6 +195,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       </label>
       <span id="systemCountBadge" style="font-size:0.82rem; color:var(--accent);"></span>
     </div>
+    <p class="bulk-warning" id="bulkWarning" role="status" hidden></p>
 
     <!-- Row 3: Filter Remedy Available Checkbox -->
     <div class="control-row">
@@ -198,15 +234,264 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       <tbody></tbody>
     </table>
   </div>
-  <div class="status-bar" id="statusBar">Ready. 100% offline in-browser processing (Formatted as Excel TableStyleMedium15 + Word Wrap).</div>
+  <div class="status-bar" id="statusBar" role="status">Ready. 100% offline in-browser processing (Formatted as Excel TableStyleMedium15 + Word Wrap).</div>
 </div>
 
+<dialog class="about-dialog" id="aboutDialog" aria-labelledby="aboutTitle">
+  <div class="about-heading">
+    <h2 id="aboutTitle">About RA VPH Summary Builder</h2>
+    <form method="dialog">
+      <button class="about-button" type="submit" autofocus>Close</button>
+    </form>
+  </div>
+  <div class="about-content">
+    <p>I built this tool to turn VRAM exports into formatted Excel workbooks for reviewing findings with available remedies and preparing a POAM. Spreadsheet processing and workbook generation run locally in your browser, including when you open this file offline.</p>
+    <dl class="about-details">
+      <dt>Authored by</dt><dd>IT1 McPherson, Charlie</dd>
+      <dt>Input formats</dt><dd>XLSX, XLS, CSV</dd>
+      <dt>Project</dt><dd><a href="https://github.com/Charlie22911/RA-VPH-Builder" target="_blank" rel="noopener noreferrer">RA-VPH-Builder on GitHub</a></dd>
+    </dl>
+    <section>
+      <h3>How to use</h3>
+      <ol>
+        <li>Open a combined VRAM export or select the separate Critical, High, Medium, and Low exports together. The builder reads the first worksheet from each workbook.</li>
+        <li>Review the preview and choose whether to filter for findings with a remedy available.</li>
+        <li>Generate a workbook. For multiple system acronyms, choose a single system, one combined workbook, or a ZIP containing a workbook per system. The combined option includes records with a blank acronym that match the filter.</li>
+      </ol>
+    </section>
+    <details>
+      <summary>Spreadsheet library licenses</summary>
+      <pre class="about-license" tabindex="0">SheetJS Community Edition 0.20.3
+Copyright (C) 2012-present SheetJS LLC
+Source: https://git.sheetjs.com/sheetjs/sheetjs
+
+The standalone parser also bundles the following SheetJS components:
+
+codepage 1.15.0 — Copyright (C) 2013-present SheetJS LLC
+https://github.com/SheetJS/js-codepage
+
+CRC-32 1.2.0 — Copyright (C) 2014-present SheetJS LLC
+https://github.com/SheetJS/js-crc32
+
+CFB 1.2.2 — Copyright (C) 2013-present SheetJS LLC
+https://github.com/SheetJS/js-cfb
+
+The license below applies to these third-party components.
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "{}"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright (C) 2012-present   SheetJS LLC
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.</pre>
+    </details>
+  </div>
+</dialog>
+
 <script>
-// Verify that SheetJS (XLSX) has been pasted inline
+document.getElementById('aboutButton').addEventListener('click', () => {
+  document.getElementById('aboutDialog').showModal();
+});
+
 window.addEventListener('DOMContentLoaded', () => {
   if (typeof XLSX === 'undefined') {
     document.getElementById('libWarning').style.display = 'block';
-    document.getElementById('statusBar').textContent = 'Waiting for inline SheetJS library to be pasted into <head>...';
+    document.getElementById('statusBar').textContent = 'Spreadsheet import is unavailable.';
   }
 });
 
@@ -216,6 +501,12 @@ const CORE_COLUMNS = [
   'Last Detected Date', 'Days Detected', 'Remedy Available', 'Remediation Details',
   'Remediation Date', 'Plugin ID', 'Remediation Status', 'System Type'
 ];
+
+const REQUIRED_COLUMNS = ['Asset ID', 'Plugin ID', 'Severity', 'Remedy Available'];
+const DATE_COLUMNS = new Set(['Last Detected Date', 'Remediation Date']);
+const BULK_SELECTION = '__BULK_ALL__';
+const COMBINED_SELECTION = '__COMBINED__';
+const SYSTEM_PREFIX = 'system:';
 
 const POAM_COLUMNS = [
   'Script Name',
@@ -231,7 +522,10 @@ const POAM_COLUMNS = [
 
 let rawLoadedRows = [];
 let detectedSystems = [];
-let bannerText = 'CUI';
+let rowsBySystem = new Map();
+let importVersion = 0;
+let importInProgress = false;
+let exportInProgress = false;
 let currentDateStamp = '';
 let processedData = {
   Summary: [],
@@ -275,7 +569,9 @@ dropZone.addEventListener('drop', (e) => {
   if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
 });
 document.getElementById('fileInput').addEventListener('change', (e) => {
-  if (e.target.files.length) handleFiles(e.target.files);
+  const files = Array.from(e.target.files);
+  e.target.value = '';
+  if (files.length) handleFiles(files);
 });
 document.getElementById('filterRA').addEventListener('change', () => {
   if (rawLoadedRows.length) updateUIAndPreview();
@@ -290,107 +586,180 @@ document.getElementById('systemSelect').addEventListener('change', () => {
 function updateFilenameForSelection() {
   const sel = document.getElementById('systemSelect').value;
   const btn = document.getElementById('exportBtn');
+  const warning = document.getElementById('bulkWarning');
+  const unassigned = rowsBySystem.get('')?.length ?? 0;
+  warning.hidden = sel !== BULK_SELECTION || unassigned === 0;
+  warning.textContent = warning.hidden ? '' :
+    `${unassigned.toLocaleString()} ${unassigned === 1 ? 'row' : 'rows'} without a System Acronym will be excluded from this ZIP. Choose All Systems Combined to include those rows when they match your current filter.`;
   if (detectedSystems.length <= 1) {
     document.getElementById('outFilename').value = `RA VPH Summary ${currentDateStamp}.xlsx`;
     btn.textContent = 'Generate Excel Workbook (.xlsx)';
     return;
   }
 
-  if (sel === '__BULK_ALL__') {
+  if (sel === BULK_SELECTION) {
     document.getElementById('outFilename').value = `RA VPH Summary ${currentDateStamp}.zip`;
     btn.textContent = `Bulk Download All (${detectedSystems.length} Systems .zip)`;
-  } else if (sel === '__COMBINED__') {
+  } else if (sel === COMBINED_SELECTION) {
     document.getElementById('outFilename').value = `RA VPH Summary ${currentDateStamp}.xlsx`;
     btn.textContent = 'Generate Combined Workbook (.xlsx)';
   } else {
-    const safeSys = sanitizeSystemForFilename(sel);
+    const safeSys = sanitizeSystemForFilename(sel.slice(SYSTEM_PREFIX.length));
     document.getElementById('outFilename').value = `RA VPH Summary - ${safeSys} ${currentDateStamp}.xlsx`;
     btn.textContent = 'Generate System Workbook (.xlsx)';
   }
 }
 
-async function handleFiles(fileList) {
-  if (typeof XLSX === 'undefined') {
-    alert('SheetJS (XLSX) is not loaded! Please paste the SheetJS script block into the HTML head first.');
-    return;
-  }
-  document.getElementById('statusBar').textContent = 'Reading uploaded file(s)...';
-  rawLoadedRows = [];
-  for (const file of fileList) {
-    const data = await file.arrayBuffer();
-    const wb = XLSX.read(data, { type: 'array' });
-    const firstSheet = wb.Sheets[wb.SheetNames[0]];
-    const aoa = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
-    if (!aoa || aoa.length === 0) continue;
+function syncControls() {
+  const busy = importInProgress || exportInProgress;
+  document.getElementById('exportBtn').disabled = busy || rawLoadedRows.length === 0;
+  document.getElementById('fileInput').disabled = exportInProgress;
+  document.getElementById('systemSelect').disabled = busy;
+  document.getElementById('filterRA').disabled = busy;
+  document.getElementById('outFilename').disabled = busy;
+}
 
-    // Check if Row 0 has a CUI timestamp banner
-    if (aoa[0][0] && String(aoa[0][0]).trim() !== '' && String(aoa[0][0]).toUpperCase().includes('CUI')) {
-      bannerText = String(aoa[0][0]).trim();
-      document.getElementById('bannerInfo').textContent = `Source Banner: ${bannerText}`;
-      const match = bannerText.match(/(\d{4})-(\d{2})-(\d{2})/);
-      if (match) {
-        const d = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-        currentDateStamp = getFormattedDateStamp(d);
-      }
-    }
-
-    // Locate header row containing 'Asset ID' and 'Plugin ID'
-    let headerRowIdx = 0;
-    for (let r = 0; r < Math.min(10, aoa.length); r++) {
-      const rowStrs = aoa[r].map(c => String(c).trim());
-      if (rowStrs.includes('Asset ID') && rowStrs.includes('Plugin ID')) {
-        headerRowIdx = r;
-        break;
-      }
-    }
-
-    const headers = aoa[headerRowIdx].map(c => String(c).trim());
-    for (let r = headerRowIdx + 1; r < aoa.length; r++) {
-      const row = aoa[r];
-      if (!row || row.length === 0) continue;
-      let obj = {};
-      let hasData = false;
-      headers.forEach((h, idx) => {
-        if (CORE_COLUMNS.includes(h)) {
-          obj[h] = row[idx] !== undefined ? row[idx] : '';
-          if (obj[h] !== '') hasData = true;
-        }
-      });
-      if (hasData && obj['Plugin ID'] !== '') {
-        rawLoadedRows.push(obj);
-      }
+function readSourceRows(data, fileName) {
+  const isCsv = /\.csv$/i.test(fileName);
+  let input = data;
+  let type = 'array';
+  if (isCsv) {
+    try {
+      input = new TextDecoder('utf-8', { fatal: true }).decode(data);
+      type = 'string';
+    } catch {
+      // Let SheetJS detect the encoding of older CSV exports.
     }
   }
+  const workbook = XLSX.read(input, { type, sheets: 0, raw: isCsv, cellNF: !isCsv });
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  if (!sheet?.['!ref']) throw new Error('The first worksheet is empty.');
 
-  // Detect unique System Acronyms
-  const sysSet = new Set();
-  for (const r of rawLoadedRows) {
-    const sys = String(r['System Acronym'] ?? '').trim();
-    if (sys) sysSet.add(sys);
+  const values = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+  let headerIndex = -1;
+  let headers = [];
+  let bestMatch = 0;
+  for (let i = 0; i < Math.min(10, values.length); i++) {
+    const candidate = values[i].map(value => String(value).trim());
+    const matches = REQUIRED_COLUMNS.filter(name => candidate.includes(name)).length;
+    if (matches > bestMatch) {
+      bestMatch = matches;
+      headerIndex = i;
+      headers = candidate;
+    }
+    if (matches === REQUIRED_COLUMNS.length) break;
   }
-  detectedSystems = Array.from(sysSet).sort((a, b) => a.localeCompare(b));
+  const missing = REQUIRED_COLUMNS.filter(name => !headers.includes(name));
+  if (missing.length) throw new Error(`Missing required columns: ${missing.join(', ')}.`);
+  const columns = headers.flatMap((name, index) => CORE_COLUMNS.includes(name) ? [{ name, index }] : []);
+  if (new Set(columns.map(column => column.name)).size !== columns.length) {
+    throw new Error('A VRAM column appears more than once in the header.');
+  }
 
+  const firstCell = XLSX.utils.decode_range(sheet['!ref']).s;
+  const rows = [];
+  for (let r = headerIndex + 1; r < values.length; r++) {
+    const rowValues = values[r];
+    const row = {};
+    for (const { name, index } of columns) {
+      let value = rowValues[index] ?? '';
+      if (!isCsv && DATE_COLUMNS.has(name)) {
+        const address = XLSX.utils.encode_cell({ r: firstCell.r + r, c: firstCell.c + index });
+        const cell = sheet[address];
+        if (cell?.z && XLSX.SSF.is_date(cell.z)) value = cell.w ?? cell.v;
+      }
+      row[name] = value;
+    }
+    if (String(row['Plugin ID']).trim()) rows.push(row);
+  }
+  const firstValue = String(values[0]?.[0] ?? '').trim();
+  return { rows, banner: /CUI/i.test(firstValue) ? firstValue : '' };
+}
+
+function indexRowsBySystem(rows) {
+  const index = new Map();
+  for (const row of rows) {
+    const system = String(row['System Acronym'] ?? '').trim();
+    if (!index.has(system)) index.set(system, []);
+    index.get(system).push(row);
+  }
+  return index;
+}
+
+function updateSystemOptions() {
   const sysRow = document.getElementById('systemSelectRow');
   const sysSelect = document.getElementById('systemSelect');
   const sysBadge = document.getElementById('systemCountBadge');
-
-  if (detectedSystems.length > 1) {
-    sysRow.style.display = 'flex';
-    sysBadge.textContent = `${detectedSystems.length} Systems Detected in Export`;
-    let optsHtml = `<option value="__BULK_ALL__">📦 Bulk Download All Systems (${detectedSystems.length} Separate .xlsx Files in .zip)</option>`;
-    optsHtml += `<option value="__COMBINED__">All Systems Combined (Single Workbook)</option>`;
-    for (const sys of detectedSystems) {
-      optsHtml += `<option value="${sys.replace(/"/g, '&quot;')}">${sys.replace(/</g, '&lt;')}</option>`;
-    }
-    sysSelect.innerHTML = optsHtml;
-    sysSelect.value = '__BULK_ALL__';
+  const addOption = (value, label) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    sysSelect.append(option);
+  };
+  sysSelect.replaceChildren();
+  const multipleSystems = detectedSystems.length > 1;
+  sysRow.style.display = multipleSystems ? 'flex' : 'none';
+  sysBadge.textContent = multipleSystems ? `${detectedSystems.length} Systems Detected in Export` : '';
+  if (multipleSystems) {
+    addOption(BULK_SELECTION, `📦 Bulk Download All Systems (${detectedSystems.length} Separate .xlsx Files in .zip)`);
+    addOption(COMBINED_SELECTION, 'All Systems Combined (Single Workbook)');
+    for (const system of detectedSystems) addOption(SYSTEM_PREFIX + system, system);
+    sysSelect.value = BULK_SELECTION;
   } else {
-    sysRow.style.display = 'none';
-    sysSelect.innerHTML = `<option value="__COMBINED__">All Systems</option>`;
+    addOption(COMBINED_SELECTION, 'All Systems');
+    sysSelect.value = COMBINED_SELECTION;
+  }
+}
+
+async function handleFiles(fileList) {
+  if (exportInProgress) return;
+  const files = Array.from(fileList);
+  const status = document.getElementById('statusBar');
+  if (typeof XLSX === 'undefined') {
+    status.textContent = 'The spreadsheet library is unavailable. Open a fresh copy of the standalone HTML file.';
+    return;
   }
 
-  updateFilenameForSelection();
-  updateUIAndPreview();
+  const version = ++importVersion;
+  importInProgress = true;
+  syncControls();
+  status.textContent = 'Reading uploaded file(s)...';
+
+  const nextRows = [];
+  let nextBanner = '';
+  let fileName = '';
+  try {
+    for (const file of files) {
+      fileName = file.name;
+      const data = await file.arrayBuffer();
+      if (version !== importVersion) return;
+      const source = readSourceRows(data, fileName);
+      for (const row of source.rows) nextRows.push(row);
+      if (source.banner) nextBanner = source.banner;
+    }
+
+    const match = nextBanner.match(/(\d{4})-(\d{2})-(\d{2})/);
+    const sourceDate = match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : null;
+    const validDate = sourceDate && sourceDate.getFullYear() === Number(match[1]) &&
+      sourceDate.getMonth() === Number(match[2]) - 1 && sourceDate.getDate() === Number(match[3]);
+    currentDateStamp = getFormattedDateStamp(validDate ? sourceDate : new Date());
+    rawLoadedRows = nextRows;
+    rowsBySystem = indexRowsBySystem(nextRows);
+    detectedSystems = [...rowsBySystem.keys()].filter(Boolean).sort((a, b) =>
+      a.localeCompare(b) || (a < b ? -1 : a > b ? 1 : 0));
+    document.getElementById('bannerInfo').textContent = nextBanner ? `Source Banner: ${nextBanner}` : '';
+    updateSystemOptions();
+    importInProgress = false;
+    updateFilenameForSelection();
+    updateUIAndPreview();
+  } catch (error) {
+    if (version === importVersion) status.textContent = `Could not import "${fileName}". ${error.message}`;
+  } finally {
+    if (version === importVersion) {
+      importInProgress = false;
+      syncControls();
+    }
+  }
 }
 
 function normalizeBoolean(val) {
@@ -402,7 +771,7 @@ function normalizeBoolean(val) {
 function toIntOrVal(val) {
   if (val === '' || val === null || val === undefined) return '';
   const n = Number(val);
-  return Number.isNaN(n) ? val : Math.round(n);
+  return Number.isFinite(n) ? Math.round(n) : val;
 }
 
 // Normalize line endings to \r\n so Excel properly recognizes multi-line breaks
@@ -521,12 +890,10 @@ function computeDatasetForRows(sourceRows, filterRA) {
 
 function updateUIAndPreview() {
   const filterRA = document.getElementById('filterRA').checked;
-  const selSys = document.getElementById('systemSelect').value;
-
-  let activeRawRows = rawLoadedRows;
-  if (detectedSystems.length > 1 && selSys !== '__BULK_ALL__' && selSys !== '__COMBINED__') {
-    activeRawRows = rawLoadedRows.filter(r => String(r['System Acronym'] ?? '').trim() === selSys);
-  }
+  const selected = document.getElementById('systemSelect').value;
+  const activeRawRows = selected.startsWith(SYSTEM_PREFIX)
+    ? rowsBySystem.get(selected.slice(SYSTEM_PREFIX.length)) ?? []
+    : rawLoadedRows;
 
   processedData = computeDatasetForRows(activeRawRows, filterRA);
 
@@ -539,7 +906,7 @@ function updateUIAndPreview() {
   document.getElementById('statMed').textContent = processedData.Med.length.toLocaleString();
   document.getElementById('statLow').textContent = processedData.Low.length.toLocaleString();
 
-  document.getElementById('exportBtn').disabled = rawLoadedRows.length === 0;
+  syncControls();
   renderPreview();
 }
 
@@ -560,6 +927,11 @@ function renderPreview() {
   if (rows.length === 0) {
     thead.innerHTML = '<tr><th>No rows in this sheet for the current filter selection</th></tr>';
     tbody.innerHTML = '';
+    if (!importInProgress && !exportInProgress) {
+      document.getElementById('statusBar').textContent = rawLoadedRows.length
+        ? `No rows in "${currentTab}" for the current filter selection.`
+        : 'No findings loaded. Choose one or more VRAM exports.';
+    }
     return;
   }
 
@@ -578,9 +950,10 @@ function renderPreview() {
   }
   tbody.innerHTML = html;
 
-  const selSys = document.getElementById('systemSelect').value;
-  const sysLabel = (detectedSystems.length > 1 && selSys !== '__BULK_ALL__' && selSys !== '__COMBINED__')
-    ? ` [System: ${selSys}]`
+  if (importInProgress || exportInProgress) return;
+  const selected = document.getElementById('systemSelect').value;
+  const sysLabel = selected.startsWith(SYSTEM_PREFIX)
+    ? ` [System: ${selected.slice(SYSTEM_PREFIX.length)}]`
     : (detectedSystems.length > 1 ? ` [All ${detectedSystems.length} Systems Preview]` : '');
   document.getElementById('statusBar').textContent =
     `Showing top ${limit.toLocaleString()} of ${rows.length.toLocaleString()} rows in "${currentTab}"${sysLabel}.`;
@@ -682,6 +1055,7 @@ async function writeZipEntries(entriesMap, useStore = false, mimeType = 'applica
 
   for (const [fname, rawBytes] of entriesMap.entries()) {
     const fnameBytes = enc.encode(fname);
+    const flags = fnameBytes.some(byte => byte >= 128) ? 0x0800 : 0;
     const crc = crc32(rawBytes);
     const compBytes = useStore ? rawBytes : await deflateRawBytes(rawBytes);
     const method = useStore ? 0 : 8; // 0 = Store (instant for already-compressed .xlsx files), 8 = Deflate
@@ -690,7 +1064,7 @@ async function writeZipEntries(entriesMap, useStore = false, mimeType = 'applica
     const ldv = new DataView(lhdr.buffer);
     ldv.setUint32(0, 0x04034b50, true);
     ldv.setUint16(4, 20, true);
-    ldv.setUint16(6, 0, true);
+    ldv.setUint16(6, flags, true);
     ldv.setUint16(8, method, true);
     ldv.setUint16(10, 0, true);
     ldv.setUint16(12, 0, true);
@@ -708,7 +1082,7 @@ async function writeZipEntries(entriesMap, useStore = false, mimeType = 'applica
     cddv.setUint32(0, 0x02014b50, true);
     cddv.setUint16(4, 20, true);
     cddv.setUint16(6, 20, true);
-    cddv.setUint16(8, 0, true);
+    cddv.setUint16(8, flags, true);
     cddv.setUint16(10, method, true);
     cddv.setUint16(12, 0, true);
     cddv.setUint16(14, 0, true);
@@ -873,7 +1247,7 @@ async function buildFormattedXlsxBlob(dataset) {
     ]);
   });
   if (summaryAOA.length === 1) summaryAOA.push(['', '', 0, '', '', '']);
-  const wsSummary = XLSX.utils.aoa_to_sheet(summaryAOA);
+  const wsSummary = XLSX.utils.aoa_to_sheet(summaryAOA, { dense: true });
   applySheetCols(wsSummary, [48, 12, 10, 65, 18, 14]);
   XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
   tableSpecs.push({
@@ -900,7 +1274,7 @@ async function buildFormattedXlsxBlob(dataset) {
     ]);
   });
   if (perAssetAOA.length === 1) perAssetAOA.push(['', '', '', '', 0, 0, 0, 0, 0]);
-  const wsPerAsset = XLSX.utils.aoa_to_sheet(perAssetAOA);
+  const wsPerAsset = XLSX.utils.aoa_to_sheet(perAssetAOA, { dense: true });
   applySheetCols(wsPerAsset, [24, 16, 20, 18, 12, 12, 12, 12, 12]);
   XLSX.utils.book_append_sheet(wb, wsPerAsset, 'Per Asset');
   tableSpecs.push({
@@ -916,7 +1290,7 @@ async function buildFormattedXlsxBlob(dataset) {
     allAOA.push(CORE_COLUMNS.map(c => r[c]));
   });
   if (allAOA.length === 1) allAOA.push(CORE_COLUMNS.map(() => ''));
-  const wsAll = XLSX.utils.aoa_to_sheet(allAOA);
+  const wsAll = XLSX.utils.aoa_to_sheet(allAOA, { dense: true });
   applySheetCols(wsAll, coreWidths);
   XLSX.utils.book_append_sheet(wb, wsAll, 'ALL');
   tableSpecs.push({
@@ -933,7 +1307,7 @@ async function buildFormattedXlsxBlob(dataset) {
       sevAOA.push(CORE_COLUMNS.map(c => r[c]));
     });
     if (sevAOA.length === 1) sevAOA.push(CORE_COLUMNS.map(() => ''));
-    const wsSev = XLSX.utils.aoa_to_sheet(sevAOA);
+    const wsSev = XLSX.utils.aoa_to_sheet(sevAOA, { dense: true });
     applySheetCols(wsSev, coreWidths);
     XLSX.utils.book_append_sheet(wb, wsSev, sevKey);
     tableSpecs.push({
@@ -946,11 +1320,15 @@ async function buildFormattedXlsxBlob(dataset) {
   // 5. POAM Sheet (9 Columns: Script Name, Severity, Affected Assets, Status, Plan of Action / Mitigation Factors, Tracking Method / Ticket Number, Planned Fix Date, POC, Comments / Notes)
   const poamAOA = [POAM_COLUMNS];
   dataset.POAM.forEach((r, idx) => {
-    const rowNum = idx + 2;
+    // Summary and POAM are generated in the same Plugin ID order. Embed the ID so the formula moves with the POAM row when sorted.
+    const pluginId = dataset.Summary[idx]['Plugin ID'];
+    const countFormula = typeof pluginId === 'number'
+      ? `COUNTIF(ALL!P:P, ${pluginId})`
+      : `SUMPRODUCT(--EXACT(ALLTable[Plugin ID],"${String(pluginId).replace(/"/g, '""')}"))`;
     poamAOA.push([
       r['Script Name'],
       r['Severity'],
-      { t: 'n', f: `COUNTIF(ALL!E:E, A${rowNum})`, v: r['Affected Assets'] },
+      { t: 'n', f: countFormula, v: r['Affected Assets'] },
       '',
       '',
       '',
@@ -960,7 +1338,7 @@ async function buildFormattedXlsxBlob(dataset) {
     ]);
   });
   if (poamAOA.length === 1) poamAOA.push(['', '', 0, '', '', '', '', '', '']);
-  const wsPoam = XLSX.utils.aoa_to_sheet(poamAOA);
+  const wsPoam = XLSX.utils.aoa_to_sheet(poamAOA, { dense: true });
   applySheetCols(wsPoam, [48, 12, 16, 16, 48, 32, 18, 14, 42]);
   XLSX.utils.book_append_sheet(wb, wsPoam, 'POAM');
   tableSpecs.push({
@@ -984,14 +1362,33 @@ function triggerBlobDownload(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
+function getBulkFilenames(systems, dateStamp) {
+  const stems = systems.map(system => `RA VPH Summary - ${sanitizeSystemForFilename(system)}`);
+  const nameKey = name => name.normalize('NFC').toLowerCase();
+  const reserved = new Set(stems.map(nameKey));
+  const used = new Set();
+  return stems.map(stem => {
+    let unique = stem;
+    let suffix = 2;
+    while (used.has(nameKey(unique))) {
+      do {
+        unique = `${stem} (${suffix++})`;
+      } while (reserved.has(nameKey(unique)));
+    }
+    used.add(nameKey(unique));
+    return `${unique} ${dateStamp}.xlsx`;
+  });
+}
+
 // Export single workbook OR bulk ZIP of all detected systems
 async function exportWorkbook() {
+  if (importInProgress || exportInProgress || !rawLoadedRows.length) return;
   if (typeof XLSX === 'undefined') {
     alert('SheetJS (XLSX) is not loaded!');
     return;
   }
-  const btn = document.getElementById('exportBtn');
-  btn.disabled = true;
+  exportInProgress = true;
+  syncControls();
 
   try {
     const filterRA = document.getElementById('filterRA').checked;
@@ -999,19 +1396,18 @@ async function exportWorkbook() {
     const outName = document.getElementById('outFilename').value.trim() || `RA VPH Summary ${currentDateStamp}.xlsx`;
 
     // Case 1: Bulk Download All Systems as a single .zip archive containing one .xlsx per System Acronym
-    if (detectedSystems.length > 1 && selSys === '__BULK_ALL__') {
+    if (detectedSystems.length > 1 && selSys === BULK_SELECTION) {
       const zipEntries = new Map();
+      const filenames = getBulkFilenames(detectedSystems, currentDateStamp);
       for (let i = 0; i < detectedSystems.length; i++) {
         const sys = detectedSystems[i];
         document.getElementById('statusBar').textContent =
           `Building workbook (${i + 1}/${detectedSystems.length}): ${sys}...`;
-        const sysRows = rawLoadedRows.filter(r => String(r['System Acronym'] ?? '').trim() === sys);
+        const sysRows = rowsBySystem.get(sys);
         const sysDataset = computeDatasetForRows(sysRows, filterRA);
         const xlsxBlob = await buildFormattedXlsxBlob(sysDataset);
         const xlsxBytes = new Uint8Array(await xlsxBlob.arrayBuffer());
-        const safeSys = sanitizeSystemForFilename(sys);
-        const fileNameInZip = `RA VPH Summary - ${safeSys} ${currentDateStamp}.xlsx`;
-        zipEntries.set(fileNameInZip, xlsxBytes);
+        zipEntries.set(filenames[i], xlsxBytes);
       }
 
       document.getElementById('statusBar').textContent = `Packaging ${detectedSystems.length} workbooks into ZIP archive...`;
@@ -1019,7 +1415,7 @@ async function exportWorkbook() {
       const finalZipName = outName.toLowerCase().endsWith('.zip') ? outName : `${outName.replace(/\.xlsx$/i, '')}.zip`;
       triggerBlobDownload(zipBlob, finalZipName);
       document.getElementById('statusBar').textContent =
-        `Bulk download complete! "${finalZipName}" (${detectedSystems.length} separate system workbooks) downloaded.`;
+        `Bulk download complete! "${finalZipName}" (${zipEntries.size} separate system workbooks) downloaded.`;
     } else {
       // Case 2: Single System or Combined Workbook
       document.getElementById('statusBar').textContent = 'Building Excel workbook with TableStyleMedium15, Word Wrap, POAM sheet, and live formulas...';
@@ -1032,7 +1428,8 @@ async function exportWorkbook() {
     console.error(err);
     document.getElementById('statusBar').textContent = 'Error generating workbook: ' + err.message;
   } finally {
-    btn.disabled = false;
+    exportInProgress = false;
+    syncControls();
   }
 }
 </script>
